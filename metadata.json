@@ -1,0 +1,6 @@
+{
+  "name": "RETEX – Moda y Economía Circular",
+  "description": "Plataforma de recolección textil, donación responsable y canje de productos sostenibles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

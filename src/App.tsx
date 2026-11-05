@@ -34,8 +34,11 @@ const INITIAL_STATE: AppState = {
   userName: 'Camila Morales',
   userEmail: 'camila.retex@gmail.com',
   userPhone: '+51 987 654 321',
-  garmentType: 'Polo / Camiseta',
-  condition: 'Buen estado',
+  garmentType: 'Polo / Camiseta, Pantalón / Jeans',
+  garmentTypes: ['Polo / Camiseta', 'Pantalón / Jeans'],
+  condition: 'Buen estado y Deteriorada',
+  qtyBuenEstado: 3,
+  qtyDeteriorada: 2,
   quantity: 5,
   isDenied: false,
   showWhatsAppModal: false,
@@ -220,7 +223,7 @@ export default function App() {
       points: Math.max(0, prev.points - giftCard.pointsUsed),
       redeemedGiftCards: [giftCard, ...(prev.redeemedGiftCards || [])],
     }));
-    showToast(`¡Gift Card de ${giftCard.discountPercent}% en ${giftCard.brand} canjeada con éxito!`);
+    showToast(`¡Cupón de ${giftCard.discountPercent}% en ${giftCard.brand} canjeado con éxito!`);
   };
 
   const currentProduct = PRODUCTS[state.selectedProductIndex] || PRODUCTS[0];
@@ -317,9 +320,19 @@ export default function App() {
         return (
           <SolicitarScreen
             garmentType={state.garmentType}
+            garmentTypes={state.garmentTypes || [state.garmentType]}
             condition={state.condition}
+            qtyBuenEstado={state.qtyBuenEstado ?? 3}
+            qtyDeteriorada={state.qtyDeteriorada ?? 2}
             quantity={state.quantity}
-            onGarmentTypeChange={(t: GarmentType) =>
+            onGarmentTypesChange={(types: string[]) =>
+              setState((prev) => ({
+                ...prev,
+                garmentTypes: types,
+                garmentType: types.join(', '),
+              }))
+            }
+            onGarmentTypeChange={(t: string) =>
               setState((prev) => ({ ...prev, garmentType: t }))
             }
             onConditionChange={(c: ClothCondition) =>
@@ -328,6 +341,20 @@ export default function App() {
             onQuantityChange={(q: number) =>
               setState((prev) => ({ ...prev, quantity: q }))
             }
+            onCountersChange={(buen: number, det: number) => {
+              const total = buen + det;
+              let cond: ClothCondition = 'Buen estado y Deteriorada';
+              if (buen > 0 && det === 0) cond = 'Buen estado';
+              else if (buen === 0 && det > 0) cond = 'Deteriorada';
+
+              setState((prev) => ({
+                ...prev,
+                qtyBuenEstado: buen,
+                qtyDeteriorada: det,
+                quantity: total,
+                condition: cond,
+              }));
+            }}
             onNext={() => goToScreen('programar')}
             onCancel={() => goToScreen('panel_donar')}
           />
@@ -342,6 +369,8 @@ export default function App() {
             quantity={state.quantity}
             garmentType={state.garmentType}
             condition={state.condition}
+            qtyBuenEstado={state.qtyBuenEstado}
+            qtyDeteriorada={state.qtyDeteriorada}
             photoUrl={state.photoUrl}
             photoName={state.photoName}
             onAddressChange={(addr) =>

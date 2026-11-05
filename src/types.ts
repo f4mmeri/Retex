@@ -27,6 +27,8 @@ export interface GiftCardTier {
   approxDeliveries: string;
 }
 
+export type CouponTier = GiftCardTier;
+
 export interface RedeemedGiftCard {
   id: string;
   brand: PartnerBrand;
@@ -36,6 +38,8 @@ export interface RedeemedGiftCard {
   redeemedAt: string;
   expiresAt: string;
 }
+
+export type RedeemedCoupon = RedeemedGiftCard;
 
 export interface Product {
   id: string;
@@ -51,9 +55,15 @@ export type GarmentType =
   | 'Pantalón / Jeans'
   | 'Casaca / Abrigo'
   | 'Vestido / Falda'
+  | 'Ropa Infantil / Bebé'
+  | 'Ropa Mixta / Retazos'
   | 'Prendas Mixtas';
 
-export type ClothCondition = 'Buen estado' | 'Deteriorada';
+export type ClothCondition =
+  | 'Buen estado'
+  | 'Deteriorada'
+  | 'Buen estado y Deteriorada'
+  | 'Mixta';
 
 export type PaymentMethod = 'Yape' | 'Plin' | 'Tarjeta Débito/Crédito';
 
@@ -72,8 +82,11 @@ export interface AppState {
   userName: string;
   userEmail: string;
   userPhone: string;
-  garmentType: GarmentType;
+  garmentType: string;
+  garmentTypes?: string[];
   condition: ClothCondition;
+  qtyBuenEstado: number;
+  qtyDeteriorada: number;
   quantity: number;
   isDenied: boolean;
   showWhatsAppModal: boolean;

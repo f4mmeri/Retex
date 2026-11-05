@@ -2,19 +2,24 @@ import React, { useState } from 'react';
 import {
   Gift,
   Star,
-  Check,
   Copy,
   CheckCircle2,
-  ExternalLink,
   MessageCircle,
   Sparkles,
   ShoppingBag,
   Info,
-  QrCode,
+  Lock,
+  Trophy,
+  ArrowRight,
+  ChevronRight,
+  X,
+  ExternalLink,
+  Tag,
+  Check,
 } from 'lucide-react';
 import { PartnerBrand, RedeemedGiftCard } from '../../types';
 import {
-  GIFT_CARD_TIERS,
+  COUPON_TIERS,
   PARTNER_BRANDS,
   RETEX_LOGO_URL,
 } from '../../data/products';
@@ -36,38 +41,43 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
   onGoToCatalog,
   onGoToPerfil,
 }) => {
-  const [selectedBrandId, setSelectedBrandId] = useState<PartnerBrand>('Falabella');
-  const [selectedTierPoints, setSelectedTierPoints] = useState<number>(90);
+  const [selectedBrandId, setSelectedBrandId] = useState<PartnerBrand | 'all'>('Falabella');
   const [justRedeemedCard, setJustRedeemedCard] = useState<RedeemedGiftCard | null>(null);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
   const [sentWhatsApp, setSentWhatsApp] = useState<boolean>(false);
+  const [infoModalTier, setInfoModalTier] = useState<{
+    brand: (typeof PARTNER_BRANDS)[0];
+    tier: (typeof COUPON_TIERS)[0];
+  } | null>(null);
+  const [showMyCouponsOnly, setShowMyCouponsOnly] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'recompensas' | 'gana_puntos'>('recompensas');
 
-  const selectedBrand =
-    PARTNER_BRANDS.find((b) => b.id === selectedBrandId) || PARTNER_BRANDS[0];
-  const selectedTier =
-    GIFT_CARD_TIERS.find((t) => t.points === selectedTierPoints) || GIFT_CARD_TIERS[2];
+  const currentBrand =
+    selectedBrandId === 'all'
+      ? PARTNER_BRANDS[0]
+      : PARTNER_BRANDS.find((b) => b.id === selectedBrandId) || PARTNER_BRANDS[0];
 
-  const canAfford = userPoints >= selectedTier.points;
-  const missingPoints = selectedTier.points - userPoints;
-
-  const handleRedeem = () => {
-    if (!canAfford) return;
+  const handleRedeemCoupon = (
+    brand: (typeof PARTNER_BRANDS)[0],
+    tier: (typeof COUPON_TIERS)[0]
+  ) => {
+    if (userPoints < tier.points) return;
 
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const code = `${selectedBrand.codePrefix}-${selectedTier.discountPercent}OFF-${randomSuffix}`;
+    const code = `${brand.codePrefix}-${tier.discountPercent}OFF-${randomSuffix}`;
 
-    const newGiftCard: RedeemedGiftCard = {
-      id: `GC-${Date.now().toString().slice(-6)}`,
-      brand: selectedBrand.id,
-      discountPercent: selectedTier.discountPercent,
+    const newCoupon: RedeemedGiftCard = {
+      id: `CUP-${Date.now().toString().slice(-6)}`,
+      brand: brand.id,
+      discountPercent: tier.discountPercent,
       code,
-      pointsUsed: selectedTier.points,
-      redeemedAt: '22 Oct 2026',
-      expiresAt: '22 Ene 2027',
+      pointsUsed: tier.points,
+      redeemedAt: '05 Nov 2026',
+      expiresAt: '05 Feb 2027',
     };
 
-    onRedeemGiftCard(newGiftCard);
-    setJustRedeemedCard(newGiftCard);
+    onRedeemGiftCard(newCoupon);
+    setJustRedeemedCard(newCoupon);
     setCopiedCode(false);
     setSentWhatsApp(false);
   };
@@ -79,9 +89,35 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col gap-3 pb-3">
+    <div className="flex-1 flex flex-col gap-3 pb-3 text-left">
+      {/* Top Points Bar (Inspired by adiClub green bar) */}
+      <div className="bg-[#1e5c3c] text-white rounded-2xl p-3 flex items-center justify-between shadow-xs">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center font-black text-amber-300">
+            ✪
+          </div>
+          <div>
+            <div className="text-[14px] font-black tracking-tight leading-tight">
+              {userPoints} puntos RETEX
+            </div>
+            <span className="text-[10px] text-white/80">
+              Disponibles para cupones oficiales
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('gana_puntos')}
+          className="text-[11px] font-bold text-amber-300 hover:text-white flex items-center gap-1 cursor-pointer transition-colors"
+        >
+          <span>Cómo ganar más</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
       {/* Header Bar */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-0.5">
         <div className="flex items-center gap-2">
           <img
             src={RETEX_LOGO_URL}
@@ -91,21 +127,16 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
           />
           <div>
             <h2 className="text-[16px] font-extrabold text-[#132a1c] leading-tight">
-              Gift Cards & Bonos 🎁
+              Cupones de Empresas Aliadas 🎟️
             </h2>
             <span className="text-[11px] text-[#60796b]">
-              Descuentos en Falabella, Oechsle, Mango y RETEX
+              Canjea tus puntos por descuentos oficiales en marcas asociadas
             </span>
           </div>
         </div>
-
-        <div className="bg-[#fef3c7] text-[#92400e] border border-[#fde68a] px-3 py-1 rounded-full text-[12.5px] font-bold inline-flex items-center gap-1.5 shadow-xs shrink-0">
-          <Star className="w-3.5 h-3.5 fill-[#f59e0b] text-[#f59e0b]" />
-          <span>{userPoints} pts</span>
-        </div>
       </div>
 
-      {/* Segmented Switcher: Productos vs Gift Cards */}
+      {/* Segmented Switcher: Productos vs Cupones Aliados */}
       <div className="bg-[#eaf4ed]/80 p-1 rounded-xl flex gap-1 border border-[#bcd6c5]">
         <button
           type="button"
@@ -121,258 +152,426 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
           className="flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold bg-white text-[#1e5c3c] shadow-xs cursor-default flex items-center justify-center gap-1"
         >
           <Gift className="w-3.5 h-3.5 text-[#1e5c3c]" />
-          <span>Gift Cards Aliadas</span>
+          <span>Cupones de Empresas</span>
         </button>
       </div>
 
-      {/* Brand Selection Pills */}
-      <div>
-        <label className="text-[11px] font-bold text-[#60796b] uppercase tracking-wider block mb-1.5 px-0.5">
-          1. Elige la marca aliada
-        </label>
-        <div className="grid grid-cols-4 gap-1.5">
-          {PARTNER_BRANDS.map((brand) => {
-            const isSelected = selectedBrandId === brand.id;
-            return (
-              <button
-                key={brand.id}
-                type="button"
-                onClick={() => setSelectedBrandId(brand.id)}
-                className={`py-2 px-1 rounded-xl text-center border transition-all cursor-pointer flex flex-col items-center justify-center ${
-                  isSelected
-                    ? 'border-2 shadow-xs'
-                    : 'bg-white border-[#e2ece5] text-[#60796b] hover:bg-[#f8faf8]'
-                }`}
-                style={{
-                  borderColor: isSelected ? brand.themeColor : undefined,
-                  backgroundColor: isSelected ? brand.accentSoft : undefined,
-                  color: isSelected ? brand.themeColor : undefined,
-                }}
-              >
-                <span className="text-[11.5px] font-extrabold tracking-tight">
-                  {brand.name}
-                </span>
-                <span className="text-[9px] opacity-75 truncate max-w-full">
-                  {brand.id === 'RETEX Sostenible' ? 'Oficial' : 'Aliado'}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Sub Tabs: Recompensas vs Cómo Ganar Puntos */}
+      <div className="flex border-b border-[#e2ece5]">
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('recompensas');
+            setShowMyCouponsOnly(false);
+          }}
+          className={`flex-1 py-2 text-center text-[12px] font-black uppercase tracking-wider transition-all cursor-pointer border-b-2 ${
+            activeTab === 'recompensas' && !showMyCouponsOnly
+              ? 'border-[#1e5c3c] text-[#1e5c3c]'
+              : 'border-transparent text-[#60796b] hover:text-[#132a1c]'
+          }`}
+        >
+          Recompensas
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('gana_puntos')}
+          className={`flex-1 py-2 text-center text-[12px] font-black uppercase tracking-wider transition-all cursor-pointer border-b-2 ${
+            activeTab === 'gana_puntos'
+              ? 'border-[#1e5c3c] text-[#1e5c3c]'
+              : 'border-transparent text-[#60796b] hover:text-[#132a1c]'
+          }`}
+        >
+          Gana Puntos
+        </button>
       </div>
 
-      {/* Official Ratio Reference & Tier Selector */}
-      <div className="bg-white border border-[#e2ece5] rounded-2xl p-3 shadow-xs">
-        <div className="flex items-center justify-between mb-2">
-          <label className="text-[11px] font-bold text-[#60796b] uppercase tracking-wider block">
-            2. Selecciona el descuento y puntos
-          </label>
-          <span className="text-[10px] text-[#1e5c3c] bg-[#eaf4ed] font-bold px-2 py-0.5 rounded-full">
-            Ratio Oficial RETEX
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          {GIFT_CARD_TIERS.map((tier) => {
-            const isSelected = selectedTierPoints === tier.points;
-            const hasEnough = userPoints >= tier.points;
-
-            return (
-              <button
-                key={tier.points}
-                type="button"
-                onClick={() => setSelectedTierPoints(tier.points)}
-                className={`w-full py-2 px-2.5 rounded-xl text-left border transition-all cursor-pointer flex items-center justify-between ${
-                  isSelected
-                    ? 'bg-[#eaf4ed] border-[#1e5c3c] text-[#132a1c] shadow-xs'
-                    : 'bg-[#f8faf8] border-[#e2ece5] text-[#60796b] hover:bg-white'
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                      isSelected
-                        ? 'bg-[#1e5c3c] text-white'
-                        : 'bg-[#e2ece5] text-[#60796b]'
-                    }`}
-                  >
-                    {isSelected ? <Check className="w-3 h-3 stroke-[3]" /> : ''}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-black text-[#132a1c]">
-                        {tier.discountPercent}% de descuento
-                      </span>
-                      {tier.isMaxTier && (
-                        <span className="text-[9px] font-extrabold bg-[#fef3c7] text-[#92400e] border border-[#fde68a] px-1.5 py-0.2 rounded-full">
-                          Tope Máximo
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10.5px] text-[#60796b] block">
-                      Equivale aprox. a {tier.approxDeliveries}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span
-                    className={`text-[12.5px] font-black ${
-                      hasEnough ? 'text-[#1e5c3c]' : 'text-[#dc2626]'
-                    }`}
-                  >
-                    {tier.points} pts
-                  </span>
-                  {!hasEnough && (
-                    <span className="block text-[9px] text-[#dc2626] font-semibold">
-                      Faltan {tier.points - userPoints}
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Visual Simulated Gift Card Mockup */}
-      <div className="relative overflow-hidden rounded-2xl p-4 text-white shadow-md bg-gradient-to-tr transition-all duration-300 border border-white/10"
-        style={{
-          background: `linear-gradient(135deg, ${selectedBrand.themeColor} 0%, #0d1a12 100%)`,
-        }}
-      >
-        {/* Subtle decorative circles */}
-        <div className="absolute -right-10 -bottom-10 w-36 h-36 rounded-full bg-white/10 blur-md pointer-events-none" />
-        <div className="absolute right-2 top-2 opacity-15 pointer-events-none">
-          <QrCode className="w-20 h-20 text-white" />
-        </div>
-
-        {/* Card Top Row */}
-        <div className="flex justify-between items-start mb-2 relative z-10">
-          <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block">
-              ECO-GIFTCARD RETEX
-            </span>
-            <span className="text-[17px] font-black tracking-tight drop-shadow-sm">
-              {selectedBrand.logoText}
-            </span>
+      {activeTab === 'gana_puntos' ? (
+        /* Explanatory Tab: Cómo Ganar Puntos */
+        <div className="bg-white border border-[#e2ece5] rounded-2xl p-4 space-y-3 shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[#eaf4ed] text-[#1e5c3c] flex items-center justify-center font-bold">
+              🌿
+            </div>
+            <div>
+              <h3 className="text-[14px] font-black text-[#132a1c]">
+                ¿Cómo acumular puntos RETEX?
+              </h3>
+              <p className="text-[11px] text-[#60796b]">
+                Cada entrega de prendas textiles suma a tu saldo para canjear cupones.
+              </p>
+            </div>
           </div>
 
-          <div className="bg-white/20 backdrop-blur-xs text-white text-[11px] font-black px-2.5 py-0.5 rounded-full border border-white/20">
-            {selectedTier.discountPercent}% OFF
-          </div>
-        </div>
+          <div className="space-y-2 pt-1 text-[12px]">
+            <div className="bg-[#f8faf8] p-2.5 rounded-xl border border-[#e2ece5] flex items-center justify-between">
+              <div>
+                <b className="text-[#132a1c] block">1 entrega (5 prendas)</b>
+                <span className="text-[#60796b] text-[11px]">Ropa apta para reciclaje o donación</span>
+              </div>
+              <span className="text-[#1e5c3c] font-black">+30 pts (5% DCTO)</span>
+            </div>
 
-        {/* Big Discount Value */}
-        <div className="my-2 relative z-10">
-          <div className="text-[26px] font-black tracking-tight leading-none text-white drop-shadow-md">
-            {selectedTier.discountPercent}% DCTO
-            {selectedTier.isMaxTier && (
-              <span className="text-[11px] font-bold text-amber-300 ml-2 tracking-normal uppercase">
-                (Tope)
-              </span>
-            )}
-          </div>
-          <span className="text-[11px] text-white/90 block mt-1 leading-snug">
-            {selectedBrand.description}
-          </span>
-        </div>
+            <div className="bg-[#f8faf8] p-2.5 rounded-xl border border-[#e2ece5] flex items-center justify-between">
+              <div>
+                <b className="text-[#132a1c] block">2 entregas (10 prendas)</b>
+                <span className="text-[#60796b] text-[11px]">Recojo programado a domicilio</span>
+              </div>
+              <span className="text-[#1e5c3c] font-black">+60 pts (10% DCTO)</span>
+            </div>
 
-        {/* Card Bottom Meta */}
-        <div className="pt-2 border-t border-white/20 flex items-center justify-between text-[10px] text-white/80 relative z-10 font-mono">
-          <div>
-            <span className="block text-white/60 text-[8.5px] uppercase font-sans">
-              Equivalencia textil
-            </span>
-            <span className="font-sans font-bold text-white">
-              {selectedTier.approxDeliveries}
-            </span>
+            <div className="bg-[#f8faf8] p-2.5 rounded-xl border border-[#e2ece5] flex items-center justify-between">
+              <div>
+                <b className="text-[#132a1c] block">3 entregas (15 prendas)</b>
+                <span className="text-[#60796b] text-[11px]">Entrega confirmada a aprovechadores</span>
+              </div>
+              <span className="text-[#1e5c3c] font-black">+90 pts (15% DCTO)</span>
+            </div>
+
+            <div className="bg-[#f8faf8] p-2.5 rounded-xl border border-[#e2ece5] flex items-center justify-between">
+              <div>
+                <b className="text-[#132a1c] block">5 a 7 entregas (Tope 30%)</b>
+                <span className="text-[#60796b] text-[11px]">Impacto circular constante</span>
+              </div>
+              <span className="text-[#1e5c3c] font-black">150 a 200 pts</span>
+            </div>
           </div>
 
-          <div className="text-right">
-            <span className="block text-white/60 text-[8.5px] uppercase font-sans">
-              Costo de canje
-            </span>
-            <span className="font-sans font-extrabold text-amber-300 text-[12px]">
-              {selectedTier.points} PUNTOS
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Redemption Action Button */}
-      <div className="pt-1">
-        {canAfford ? (
           <button
             type="button"
-            onClick={handleRedeem}
-            className="w-full py-3 px-4 bg-[#1e5c3c] hover:bg-[#17482f] text-white rounded-xl font-bold text-[13.5px] shadow-[0_4px_14px_rgba(30,92,60,0.22)] flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+            onClick={() => setActiveTab('recompensas')}
+            className="w-full py-2.5 px-3 bg-[#1e5c3c] hover:bg-[#17482f] text-white rounded-xl font-bold text-[12.5px] transition-colors cursor-pointer text-center"
           >
-            <Gift className="w-4 h-4 text-[#facc15]" />
-            <span>
-              Canjear Gift Card ({selectedTier.discountPercent}% en {selectedBrand.name}) por {selectedTier.points} pts
-            </span>
+            Ver cupones y barras de progreso
           </button>
-        ) : (
-          <div className="bg-[#fffbeb] border border-[#fde68a] rounded-xl p-3 text-center text-[#92400e] text-[12px]">
-            <Info className="w-4 h-4 inline-block mr-1 text-[#f59e0b]" />
-            <span>
-              Necesitas <strong>{selectedTier.points} pts</strong> para este bono. Te faltan{' '}
-              <strong>{missingPoints} puntos</strong> ({Math.ceil(missingPoints / 30)} entregas más de ropa).
-            </span>
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <>
+          {/* Prominent Banner: TUS CUPONES (adiClub style) */}
+          <div
+            onClick={() => setShowMyCouponsOnly(!showMyCouponsOnly)}
+            className="bg-[#1e5c3c] hover:bg-[#17482f] text-white rounded-2xl p-3 shadow-xs cursor-pointer transition-all flex items-center justify-between active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <Trophy className="w-4 h-4 text-amber-300" />
+              </div>
+              <div>
+                <div className="text-[13px] font-black tracking-tight leading-tight flex items-center gap-1.5">
+                  <span>TUS CUPONES</span>
+                  <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                    {redeemedGiftCards.length}
+                  </span>
+                </div>
+                <span className="text-[10.5px] text-white/80">
+                  {redeemedGiftCards.length > 0
+                    ? `${redeemedGiftCards.length} cupones activos listos para usar`
+                    : 'Aún no has canjeado cupones'}
+                </span>
+              </div>
+            </div>
 
-      {/* List of Previously Redeemed Gift Cards */}
-      {redeemedGiftCards.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-[#e2ece5] space-y-2">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-bold text-[#60796b] uppercase tracking-wider">
-              Tus Gift Cards activas ({redeemedGiftCards.length})
-            </span>
-            <button
-              onClick={onGoToPerfil}
-              className="text-[11px] font-bold text-[#1e5c3c] hover:underline"
-            >
-              Ver en Perfil →
-            </button>
+            <div className="flex items-center gap-1 text-[11px] font-bold text-amber-300">
+              <span>{showMyCouponsOnly ? 'Ver todas las ofertas' : 'Ver cupones'}</span>
+              <ChevronRight
+                className={`w-4 h-4 transition-transform ${showMyCouponsOnly ? 'rotate-90' : ''}`}
+              />
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            {redeemedGiftCards.slice(0, 3).map((gc) => (
-              <div
-                key={gc.id}
-                className="bg-white border border-[#e2ece5] rounded-xl p-2.5 flex items-center justify-between shadow-xs"
-              >
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <b className="text-[12px] text-[#132a1c]">{gc.brand}</b>
-                    <span className="text-[10px] font-extrabold text-[#15803d] bg-[#dcfce7] px-1.5 py-0.2 rounded">
-                      {gc.discountPercent}% DCTO
+          {/* If user clicked "Tus Cupones" banner, show their active coupons directly */}
+          {showMyCouponsOnly ? (
+            <div className="space-y-2.5 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[11px] font-bold text-[#60796b] uppercase tracking-wider">
+                  Cupones canjeados activos ({redeemedGiftCards.length})
+                </span>
+                <button
+                  onClick={() => setShowMyCouponsOnly(false)}
+                  className="text-[11px] font-bold text-[#1e5c3c] hover:underline cursor-pointer"
+                >
+                  Volver a ofertas →
+                </button>
+              </div>
+
+              {redeemedGiftCards.length === 0 ? (
+                <div className="bg-white border border-dashed border-[#bcd6c5] rounded-2xl p-6 text-center space-y-2">
+                  <Tag className="w-8 h-8 text-[#60796b] mx-auto" />
+                  <p className="text-[13px] font-bold text-[#132a1c]">
+                    No tienes cupones canjeados todavía
+                  </p>
+                  <p className="text-[11.5px] text-[#60796b]">
+                    Explora las ofertas de abajo y canjea tus puntos con las barras de progreso.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowMyCouponsOnly(false)}
+                    className="mt-2 py-2 px-4 bg-[#1e5c3c] text-white rounded-xl font-bold text-[12px] cursor-pointer"
+                  >
+                    Ver ofertas disponibles
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {redeemedGiftCards.map((gc) => (
+                    <div
+                      key={gc.id}
+                      className="bg-white border-2 border-[#1e5c3c]/20 rounded-2xl p-3 shadow-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <b className="text-[14px] text-[#132a1c] font-black">{gc.brand}</b>
+                          <span className="text-[11px] text-[#60796b] block">
+                            Canjeado el {gc.redeemedAt} · Vence: {gc.expiresAt}
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-black text-[#15803d] bg-[#dcfce7] px-2.5 py-1 rounded-full">
+                          {gc.discountPercent}% OFF
+                        </span>
+                      </div>
+
+                      <div className="bg-[#f8faf8] border border-dashed border-[#bcd6c5] rounded-xl p-2.5 flex items-center justify-between">
+                        <span className="font-mono text-[14px] font-black text-[#1e5c3c] tracking-wider select-all">
+                          {gc.code}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyCode(gc.code)}
+                          className="px-2.5 py-1 bg-white hover:bg-[#eaf4ed] text-[#1e5c3c] border border-[#bcd6c5] rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Brand Filter Pills */}
+              <div>
+                <label className="text-[11px] font-bold text-[#60796b] uppercase tracking-wider block mb-1.5 px-0.5">
+                  Filtrar por marca aliada
+                </label>
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBrandId('all')}
+                    className={`py-1.5 px-3 rounded-full text-[11px] font-extrabold whitespace-nowrap border transition-all cursor-pointer ${
+                      selectedBrandId === 'all'
+                        ? 'bg-[#1e5c3c] text-white border-[#1e5c3c] shadow-xs'
+                        : 'bg-white border-[#e2ece5] text-[#60796b] hover:bg-[#eaf4ed]'
+                    }`}
+                  >
+                    Todas las marcas
+                  </button>
+
+                  {PARTNER_BRANDS.map((brand) => {
+                    const isSelected = selectedBrandId === brand.id;
+                    return (
+                      <button
+                        key={brand.id}
+                        type="button"
+                        onClick={() => setSelectedBrandId(brand.id)}
+                        className={`py-1.5 px-3 rounded-full text-[11px] font-extrabold whitespace-nowrap border transition-all cursor-pointer flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'border-2 shadow-xs'
+                            : 'bg-white border-[#e2ece5] text-[#60796b] hover:bg-[#f8faf8]'
+                        }`}
+                        style={{
+                          borderColor: isSelected ? brand.themeColor : undefined,
+                          backgroundColor: isSelected ? brand.accentSoft : undefined,
+                          color: isSelected ? brand.themeColor : undefined,
+                        }}
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: brand.themeColor }}
+                        />
+                        <span>{brand.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* SECTION: CUPONES CON BARRAS DE PROGRESO (Exact layout from user screenshots) */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between px-0.5">
+                  <div>
+                    <h3 className="text-[13px] font-black text-[#132a1c] uppercase tracking-wide">
+                      {selectedBrandId === 'all'
+                        ? 'Cupones de Descuento RETEX'
+                        : `Cupones en ${currentBrand.name}`}
+                    </h3>
+                    <span className="text-[10.5px] text-[#60796b]">
+                      El progreso avanza con cada entrega textil realizada
                     </span>
                   </div>
-                  <span className="text-[10.5px] font-mono text-[#60796b] block">
-                    {gc.code}
+                  <span className="text-[10px] font-bold text-[#1e5c3c] bg-[#eaf4ed] px-2 py-0.5 rounded-full">
+                    {COUPON_TIERS.length} niveles
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleCopyCode(gc.code)}
-                  className="p-1.5 bg-[#f8faf8] hover:bg-[#eaf4ed] text-[#1e5c3c] rounded-lg border border-[#e2ece5] transition-colors cursor-pointer"
-                  title="Copiar cupón"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
+                {/* Vertical list of Progress-Bar Coupon Cards */}
+                <div className="space-y-3">
+                  {COUPON_TIERS.map((tier) => {
+                    const brandToUse = currentBrand;
+                    const canAfford = userPoints >= tier.points;
+                    const missingPoints = Math.max(0, tier.points - userPoints);
+                    const progressPercent = Math.min(
+                      100,
+                      Math.max(0, Math.round((userPoints / tier.points) * 100))
+                    );
+
+                    return (
+                      <div
+                        key={tier.points}
+                        className="bg-white border border-[#e2ece5] rounded-2xl p-4 shadow-xs transition-all hover:border-[#1e5c3c]/50 flex flex-col gap-2.5 relative overflow-hidden"
+                      >
+                        {/* Top Row: Title + Info Button */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: brandToUse.themeColor }}
+                            />
+                            <h4 className="text-[15px] font-black text-[#132a1c] tracking-tight uppercase">
+                              {tier.discountPercent}% OFF {brandToUse.name}
+                            </h4>
+                            {tier.isMaxTier && (
+                              <span className="text-[9px] font-black uppercase tracking-wider bg-[#fef3c7] text-[#92400e] border border-[#fde68a] px-1.5 py-0.2 rounded-full">
+                                Tope Máximo
+                              </span>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setInfoModalTier({ brand: brandToUse, tier })
+                            }
+                            className="w-6 h-6 rounded-full border border-[#d1d5db] text-[#60796b] hover:text-[#132a1c] hover:border-[#9ca3af] flex items-center justify-center text-[12px] font-bold cursor-pointer transition-colors shrink-0"
+                            title="Términos y condiciones del cupón"
+                          >
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* PROGRESS BAR (Key adiClub Feature) */}
+                        <div className="space-y-1 pt-0.5">
+                          {/* Track and Fill */}
+                          <div className="w-full h-2 rounded-full bg-[#eaf4ed] overflow-hidden relative">
+                            <div
+                              className="h-full rounded-full transition-all duration-700 ease-out"
+                              style={{
+                                width: `${progressPercent}%`,
+                                backgroundColor: canAfford ? '#15803d' : '#1e5c3c',
+                              }}
+                            />
+                          </div>
+
+                          {/* Progress Text Sub-row */}
+                          <div className="flex items-center justify-between text-[11px] font-bold">
+                            <span
+                              className={
+                                canAfford
+                                  ? 'text-[#15803d] flex items-center gap-1'
+                                  : 'text-[#60796b]'
+                              }
+                            >
+                              {canAfford ? (
+                                <>
+                                  <Check className="w-3 h-3 stroke-[3]" />
+                                  <span>Puntos suficientes</span>
+                                </>
+                              ) : (
+                                <span>Puntos insuficientes</span>
+                              )}
+                            </span>
+                            <span className="text-[#132a1c] font-black">
+                              {tier.points} puntos
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ACTION BUTTON (Locked vs Available) */}
+                        <div className="pt-1">
+                          {canAfford ? (
+                            <button
+                              type="button"
+                              onClick={() => handleRedeemCoupon(brandToUse, tier)}
+                              className="w-full py-2.5 px-3 bg-[#1e5c3c] hover:bg-[#17482f] text-white rounded-xl font-black text-[12.5px] shadow-[0_3px_10px_rgba(30,92,60,0.2)] flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+                            >
+                              <Sparkles className="w-4 h-4 text-amber-300" />
+                              <span>
+                                Canjear cupón de {tier.discountPercent}% OFF
+                              </span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="w-full py-2.5 px-3 bg-[#f3f4f6] text-[#6b7280] rounded-xl font-bold text-[12px] flex items-center justify-between cursor-not-allowed border border-[#e5e7eb]"
+                            >
+                              <span>Gana {missingPoints} puntos más</span>
+                              <Lock className="w-3.5 h-3.5 text-[#9ca3af]" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Equivalency Hint */}
+                        <div className="flex items-center justify-between text-[10px] text-[#60796b] pt-0.5 border-t border-[#f1f5f2]">
+                          <span>Equivale a: <strong>{tier.approxDeliveries}</strong></span>
+                          <span className="text-[#1e5c3c] font-semibold">
+                            {progressPercent}% completado
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+
+              {/* SECTION: OFERTAS DE MARCAS AMIGAS (adiClub style) */}
+              <div className="mt-2 bg-[#f8faf8] border border-[#e2ece5] rounded-2xl p-3.5 space-y-2.5">
+                <div>
+                  <h3 className="text-[13px] font-black text-[#132a1c] uppercase tracking-wide">
+                    Ofertas de Marcas Amigas
+                  </h3>
+                  <p className="text-[11px] text-[#60796b] mt-0.5 leading-snug">
+                    RETEX se une a los mejores aliados del retail y la moda sostenible para ofrecerte grandes beneficios.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  {PARTNER_BRANDS.map((brand) => (
+                    <div
+                      key={brand.id}
+                      onClick={() => setSelectedBrandId(brand.id)}
+                      className="bg-white border border-[#e2ece5] hover:border-[#1e5c3c] rounded-xl p-2.5 cursor-pointer transition-all hover:shadow-xs text-left"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <b className="text-[12px] text-[#132a1c] font-black">{brand.name}</b>
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: brand.themeColor }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-[#60796b] line-clamp-2 leading-tight block">
+                        {brand.description}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </>
       )}
 
-      {/* Success Modal Overlay when Gift Card is redeemed */}
+      {/* MODAL: Cupón Canjeado con Éxito */}
       {justRedeemedCard && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-5 max-w-[340px] w-full shadow-2xl text-center border border-[#e2ece5] space-y-3 relative">
@@ -381,11 +580,11 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
             </div>
 
             <h3 className="text-[18px] font-black text-[#132a1c]">
-              ¡Gift Card Canjeada con Éxito!
+              ¡Cupón Canjeado con Éxito!
             </h3>
 
             <p className="text-[12px] text-[#60796b] leading-relaxed">
-              Has canjeado <strong>{justRedeemedCard.pointsUsed} puntos RETEX</strong> por un{' '}
+              Has canjeado <strong>{justRedeemedCard.pointsUsed} puntos RETEX</strong> por un cupón de{' '}
               <strong>{justRedeemedCard.discountPercent}% de descuento</strong> en{' '}
               <strong>{justRedeemedCard.brand}</strong>.
             </p>
@@ -393,7 +592,7 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
             {/* Voucher Box with Code */}
             <div className="bg-[#f8faf8] border-2 border-dashed border-[#bcd6c5] rounded-2xl p-3 text-center space-y-1">
               <span className="text-[10px] font-bold text-[#60796b] uppercase tracking-wider block">
-                Tu código de descuento
+                Tu código de cupón
               </span>
               <div className="font-mono text-[16px] font-black text-[#1e5c3c] tracking-widest select-all py-1">
                 {justRedeemedCard.code}
@@ -413,7 +612,7 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
                 {copiedCode ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                    <span>¡Código copiado al portapapeles!</span>
+                    <span>¡Cupón copiado al portapapeles!</span>
                   </>
                 ) : (
                   <>
@@ -447,6 +646,54 @@ export const GiftCardsScreen: React.FC<GiftCardsScreenProps> = ({
                 Cerrar y seguir explorando
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: Términos del Cupón (Info button) */}
+      {infoModalTier && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl p-5 max-w-[320px] w-full shadow-xl border border-[#e2ece5] space-y-3 relative text-left">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: infoModalTier.brand.themeColor }}
+                />
+                <h4 className="text-[14px] font-black text-[#132a1c]">
+                  {infoModalTier.tier.discountPercent}% OFF {infoModalTier.brand.name}
+                </h4>
+              </div>
+              <button
+                onClick={() => setInfoModalTier(null)}
+                className="w-6 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="text-[11.5px] text-[#60796b] space-y-2 leading-relaxed">
+              <p>
+                <strong>Marca aliada:</strong> {infoModalTier.brand.name} ({infoModalTier.brand.badge})
+              </p>
+              <p>
+                <strong>Validez:</strong> {infoModalTier.brand.description}
+              </p>
+              <p>
+                <strong>Costo de canje:</strong> {infoModalTier.tier.points} puntos RETEX (equivale a {infoModalTier.tier.approxDeliveries}).
+              </p>
+              <p>
+                <strong>Vigencia del cupón:</strong> 90 días calendario a partir del momento de canje. No acumulable con otras promociones de liquidación.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setInfoModalTier(null)}
+              className="w-full py-2 bg-[#1e5c3c] text-white rounded-xl font-bold text-[12px] cursor-pointer"
+            >
+              Entendido
+            </button>
           </div>
         </div>
       )}

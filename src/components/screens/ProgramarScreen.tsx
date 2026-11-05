@@ -8,8 +8,10 @@ interface ProgramarScreenProps {
   scheduledDate: string;
   timeWindow: string;
   quantity: number;
-  garmentType: GarmentType;
+  garmentType: string;
   condition: ClothCondition;
+  qtyBuenEstado?: number;
+  qtyDeteriorada?: number;
   photoUrl: string | null;
   photoName: string;
   onAddressChange: (address: string) => void;
@@ -28,6 +30,8 @@ export const ProgramarScreen: React.FC<ProgramarScreenProps> = ({
   quantity,
   garmentType,
   condition,
+  qtyBuenEstado,
+  qtyDeteriorada,
   photoUrl,
   photoName,
   onAddressChange,
@@ -213,8 +217,19 @@ export const ProgramarScreen: React.FC<ProgramarScreenProps> = ({
             <label className="text-[11px] font-bold text-[#60796b] uppercase tracking-wider block mb-1">
               Resumen del paquete
             </label>
-            <div className="bg-[#f8faf8] border border-[#e2ece5] rounded-xl px-3 py-2 text-[12.5px] font-semibold text-[#132a1c]">
-              📦 {quantity} prendas · {garmentType} · {condition}
+            <div className="bg-[#f8faf8] border border-[#e2ece5] rounded-xl px-3 py-2 text-[12px] font-semibold text-[#132a1c] space-y-0.5">
+              <div className="flex items-center justify-between">
+                <span>📦 {quantity} prendas en total</span>
+                <span className="text-[10px] text-[#1e5c3c] font-black bg-[#eaf4ed] px-2 py-0.2 rounded-full">
+                  {condition}
+                </span>
+              </div>
+              <div className="text-[11px] text-[#60796b]">
+                {garmentType}
+                {qtyBuenEstado !== undefined && qtyDeteriorada !== undefined && (
+                  <span> ({qtyBuenEstado} en buen estado + {qtyDeteriorada} deterioradas)</span>
+                )}
+              </div>
             </div>
           </div>
         </div>

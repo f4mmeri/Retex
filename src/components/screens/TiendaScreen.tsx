@@ -44,7 +44,7 @@ export const TiendaScreen: React.FC<TiendaScreenProps> = ({
               Tienda Sostenible 🛍️
             </h2>
             <span className="text-[11px] text-[#60796b]">
-              Canjea tus puntos por piezas suprarrecicladas o gift cards
+              Canjea tus puntos por piezas suprarrecicladas o cupones de empresas
             </span>
           </div>
         </div>
@@ -55,7 +55,7 @@ export const TiendaScreen: React.FC<TiendaScreenProps> = ({
         </div>
       </div>
 
-      {/* Segmented Switcher: Productos vs Gift Cards */}
+      {/* Segmented Switcher: Productos vs Cupones Aliados */}
       <div className="bg-[#eaf4ed]/80 p-1 rounded-xl flex gap-1 border border-[#bcd6c5]">
         <button
           type="button"
@@ -71,11 +71,11 @@ export const TiendaScreen: React.FC<TiendaScreenProps> = ({
           className="flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold text-[#60796b] hover:text-[#132a1c] transition-colors cursor-pointer flex items-center justify-center gap-1"
         >
           <Gift className="w-3.5 h-3.5 text-[#1e5c3c]" />
-          <span>Gift Cards Aliadas</span>
+          <span>Cupones Aliados</span>
         </button>
       </div>
 
-      {/* Promotional Banner: Gift Cards Aliadas (Falabella, Oechsle, Mango) */}
+      {/* Promotional Banner: Cupones de Empresas Aliadas */}
       <div
         onClick={onGoToGiftCards}
         className="rounded-2xl p-3 text-white shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] relative overflow-hidden bg-gradient-to-r from-[#006f3c] via-[#1e5c3c] to-[#d6004b]"
@@ -85,14 +85,14 @@ export const TiendaScreen: React.FC<TiendaScreenProps> = ({
             <div className="flex items-center gap-1.5 mb-1">
               <span className="text-[9.5px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full text-white backdrop-blur-xs flex items-center gap-1">
                 <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-                <span>NUEVO: GIFT CARDS ALIADAS</span>
+                <span>NUEVO: CUPONES DE EMPRESAS ALIADAS</span>
               </span>
             </div>
             <h3 className="text-[14px] font-black tracking-tight leading-tight">
               Descuentos en Falabella, Oechsle y Mango
             </h3>
             <p className="text-[11px] text-white/90 mt-0.5">
-              Desde 30 pts (5% desc.) hasta 200 pts (30% tope máximo).
+              Barras de progreso: desde 30 pts (5%) hasta 200 pts (30% tope).
             </p>
           </div>
 
@@ -103,7 +103,7 @@ export const TiendaScreen: React.FC<TiendaScreenProps> = ({
 
         <div className="mt-2.5 pt-2 border-t border-white/20 flex items-center justify-between text-[10.5px] font-bold">
           <span className="text-amber-200">Ratio oficial: 30 pts = 5% desc.</span>
-          <span className="underline decoration-white/50">Canjear gift card →</span>
+          <span className="underline decoration-white/50">Ver cupones y progreso →</span>
         </div>
       </div>
 

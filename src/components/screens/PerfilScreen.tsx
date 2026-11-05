@@ -329,18 +329,18 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({
         {/* TAB 2: Historial de Canjes */}
         {activeTab === 'canjes' && (
           <div className="space-y-3 animate-in fade-in duration-200">
-            {/* Gift Cards Section */}
+            {/* Cupones Aliados Section */}
             <div>
               <div className="flex items-center justify-between px-1 mb-1.5">
                 <span className="text-[11px] font-bold text-[#60796b] uppercase tracking-wider">
-                  Gift Cards Aliadas ({redeemedGiftCards.length})
+                  Cupones de Empresas Aliadas ({redeemedGiftCards.length})
                 </span>
                 {onGoToGiftCards && (
                   <button
                     onClick={onGoToGiftCards}
                     className="text-[10.5px] font-bold text-[#1e5c3c] hover:underline cursor-pointer"
                   >
-                    + Canjear nueva →
+                    + Canjear cupón →
                   </button>
                 )}
               </div>
@@ -374,13 +374,13 @@ export const PerfilScreen: React.FC<PerfilScreenProps> = ({
                 </div>
               ) : (
                 <div className="bg-[#f8faf8] border border-dashed border-[#e2ece5] rounded-xl p-3 text-center text-[#60796b] text-[11.5px]">
-                  <span>No tienes gift cards activas aún.</span>
+                  <span>No tienes cupones activos aún.</span>
                   {onGoToGiftCards && (
                     <button
                       onClick={onGoToGiftCards}
                       className="block mx-auto mt-1 text-[#1e5c3c] font-bold underline cursor-pointer"
                     >
-                      Canjear descuentos en Falabella, Oechsle o Mango →
+                      Canjear cupones en Falabella, Oechsle o Mango →
                     </button>
                   )}
                 </div>

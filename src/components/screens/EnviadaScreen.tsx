@@ -4,7 +4,7 @@ import { GarmentType } from '../../types';
 
 interface EnviadaScreenProps {
   quantity: number;
-  garmentType: GarmentType;
+  garmentType: string;
   photoUrl: string | null;
   onSimulateAccept: () => void;
   onSimulateReject: () => void;

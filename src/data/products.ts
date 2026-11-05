@@ -64,13 +64,15 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
-export const GIFT_CARD_TIERS = [
+export const COUPON_TIERS = [
   { points: 30, discountPercent: 5, approxDeliveries: '1 entrega (5 prendas)' },
   { points: 60, discountPercent: 10, approxDeliveries: '2 entregas' },
   { points: 90, discountPercent: 15, approxDeliveries: '3 entregas' },
   { points: 150, discountPercent: 25, approxDeliveries: '5 entregas' },
   { points: 200, discountPercent: 30, isMaxTier: true, approxDeliveries: '~7 entregas' },
 ];
+
+export const GIFT_CARD_TIERS = COUPON_TIERS;
 
 export const PARTNER_BRANDS = [
   {
@@ -128,7 +130,7 @@ export const SCREEN_LABELS: Record<string, string> = {
   login: 'Acceso',
   panel_donar: 'Tab: Donar Ropa',
   panel_tienda: 'Tab: Catálogo',
-  giftcards: 'Gift Cards Aliadas',
+  giftcards: 'Cupones de Empresas Aliadas',
   panel_perfil: 'Tab: Perfil',
   solicitar: '1. Donar Ropa',
   programar: '2. Programar',
